@@ -27,10 +27,6 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Clé API Serper.dev (Google Search)</label>
                     <input type="password" id="inputSerper" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Clé API Google Gemini</label>
-                    <input type="password" id="inputGemini" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
                 <div class="pt-4 flex gap-3">
                     <button type="button" onclick="toggleConfig()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Annuler</button>
                     <button type="button" onclick="sauvegarderCles()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Enregistrer</button>
@@ -47,7 +43,6 @@
             <input type="hidden" id="hiddenSerperKey" name="serper_key">
             
             <div>
-                <!-- Retrait de la mention required et modification du placeholder -->
                 <label for="ville" class="block text-sm font-medium text-gray-700 mb-1">Ville (Optionnel)</label>
                 <input type="text" id="ville" name="ville" placeholder="Ex: Bordeaux (laisser vide pour la France entière)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition shadow-sm">
             </div>
@@ -73,7 +68,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-gray-600 mt-3 text-sm font-medium">Recherche et extraction des contacts en cours...</p>
+            <p class="text-gray-600 mt-3 text-sm font-medium">Recherche en cours...</p>
         </div>
     </div>
 
@@ -81,7 +76,6 @@
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('inputHunter').value = localStorage.getItem('hunter_key') || '';
             document.getElementById('inputSerper').value = localStorage.getItem('serper_key') || '';
-            document.getElementById('inputGemini').value = localStorage.getItem('gemini_key') || '';
         });
 
         function toggleConfig() {
@@ -91,10 +85,8 @@
         function sauvegarderCles() {
             const hunter = document.getElementById('inputHunter').value;
             const serper = document.getElementById('inputSerper').value;
-            const gemini = document.getElementById('inputGemini').value;
             localStorage.setItem('hunter_key', hunter.trim());
             localStorage.setItem('serper_key', serper.trim());
-            localStorage.setItem('gemini_key', gemini.trim());
             toggleConfig();
             alert("Clés API sauvegardées avec succès !");
         }

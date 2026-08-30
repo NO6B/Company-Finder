@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prospection IA | Résultats</title>
+    <title>Prospection | Résultats</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-6 md:p-12 min-h-screen">
@@ -81,7 +81,6 @@
                             <button 
                                 data-nom="{{ entreprise.nom|e }}" 
                                 data-site="{{ entreprise.site_web|e }}" 
-                                data-domaine="{{ entreprise.domaine|e }}" 
                                 onclick="lancerRechercheHunter(this)" 
                                 class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-3 px-4 rounded-lg transition border border-blue-200 text-sm w-full flex justify-center items-center gap-2">
                                 🔍 Chercher les adresses e-mails (Hunter.io)
@@ -121,10 +120,6 @@
         let pageActuelle = 1;
         const rechercheVille = "{{ ville }}";
         const rechercheDomaine = "{{ domaine }}";
-
-        function escapeHtmlJS(texte) {
-            return texte.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        }
 
         async function chargerPageSuivante() {
             const bouton = document.getElementById('btn-charger-plus');
@@ -188,7 +183,6 @@
         async function lancerRechercheHunter(bouton) {
             const entreprise = bouton.getAttribute('data-nom');
             const siteWeb = bouton.getAttribute('data-site');
-            const domaineRecherche = bouton.getAttribute('data-domaine');
 
             const hunterKey = localStorage.getItem('hunter_key');
             if (!hunterKey) {
@@ -221,35 +215,12 @@
                         const nom = email.last_name || '';
                         const poste = email.position || 'Poste non spécifié';
                         
-                        // Sécurisation des données avant injection dans le bouton Gemini
-                        const nomCompletSafe = escapeHtmlJS(`${prenom} ${nom}`);
-                        const posteSafe = escapeHtmlJS(poste);
-                        const entrepriseSafe = escapeHtmlJS(entreprise);
-                        const domaineSafe = escapeHtmlJS(domaineRecherche);
-                        
                         html += `
                         <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
-                            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                                <div>
-                                    <p class="font-bold text-gray-900">${prenom} ${nom}</p>
-                                    <p class="text-sm text-gray-600 font-medium">${poste}</p>
-                                    <a href="mailto:${email.value}" class="text-sm text-blue-600 hover:underline mt-1 inline-block">${email.value}</a>
-                                </div>
-                                <button 
-                                    data-entreprise="${entrepriseSafe}" 
-                                    data-domaine="${domaineSafe}" 
-                                    data-contact="${nomCompletSafe}" 
-                                    data-poste="${posteSafe}"
-                                    onclick="genererCandidature(this)" 
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-sm whitespace-nowrap">
-                                    Générer email IA
-                                </button>
-                            </div>
-                            <div class="ia-result hidden mt-4">
-                                <div class="relative bg-white border border-indigo-100 rounded-lg p-5 shadow-inner">
-                                    <button onclick="copierTexte(this)" class="absolute top-3 right-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded transition">Copier</button>
-                                    <pre class="email-content text-sm text-gray-700 whitespace-pre-wrap font-sans mt-6"></pre>
-                                </div>
+                            <div>
+                                <p class="font-bold text-gray-900">${prenom} ${nom}</p>
+                                <p class="text-sm text-gray-600 font-medium">${poste}</p>
+                                <a href="mailto:${email.value}" class="text-sm text-blue-600 hover:underline mt-1 inline-block">${email.value}</a>
                             </div>
                         </div>`;
                     });
@@ -271,63 +242,6 @@
                 bouton.innerHTML = texteOriginal;
                 bouton.classList.remove('opacity-50', 'cursor-not-allowed');
             }
-        }
-
-        async function genererCandidature(bouton) {
-            // Lecture sécurisée des données
-            const entreprise = bouton.getAttribute('data-entreprise');
-            const domaine = bouton.getAttribute('data-domaine');
-            const contact = bouton.getAttribute('data-contact');
-            const poste = bouton.getAttribute('data-poste');
-
-            const geminiKey = localStorage.getItem('gemini_key');
-            if (!geminiKey) {
-                alert("Veuillez configurer votre clé Google Gemini.");
-                return;
-            }
-
-            const blocResultat = bouton.closest('.bg-gray-50').querySelector('.ia-result');
-            const zoneTexte = blocResultat.querySelector('.email-content');
-            const texteOriginal = bouton.innerText;
-            
-            bouton.disabled = true;
-            bouton.innerText = "Génération...";
-            bouton.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            try {
-                const reponse = await fetch('/generer-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ entreprise, domaine, contact, poste, gemini_key: geminiKey })
-                });
-
-                const data = await reponse.json();
-                if (data.succes) {
-                    blocResultat.classList.remove('hidden');
-                    zoneTexte.innerText = data.email_texte;
-                } else {
-                    alert(data.erreur);
-                }
-            } catch (err) {
-                alert("Erreur de connexion avec le serveur.");
-            } finally {
-                bouton.disabled = false;
-                bouton.innerText = texteOriginal;
-                bouton.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        function copierTexte(bouton) {
-            const texte = bouton.nextElementSibling.innerText;
-            navigator.clipboard.writeText(texte).then(() => {
-                const texteOriginal = bouton.innerText;
-                bouton.innerText = "Copié !";
-                bouton.classList.add('bg-green-100', 'text-green-800');
-                setTimeout(() => {
-                    bouton.innerText = texteOriginal;
-                    bouton.classList.remove('bg-green-100', 'text-green-800');
-                }, 2000);
-            });
         }
     </script>
 </body>

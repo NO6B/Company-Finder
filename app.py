@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template, jsonify
 import requests
-from google import genai
 import urllib.parse
 import json
 import concurrent.futures
@@ -135,7 +134,6 @@ def obtenir_emails_hunter(domaine, api_key):
 def traiter_une_entreprise(ent, ville_recherchee, domaine_recherche, serper_key):
     nom = ent.get('nom_complet', 'Nom inconnu')
     
-    # Sécurisation des données de localisation pour éviter les erreurs "NoneType"
     siege = ent.get('siege') or {}
     ville_api = siege.get('libelle_commune') or 'France'
     ville_affichage = ville_recherchee.title() if ville_recherchee else ville_api.title()
@@ -206,39 +204,6 @@ def charger_plus():
             resultats_entreprises.append(future.result())
 
     return render_template('resultats.html', entreprises=resultats_entreprises, uniquement_cartes=True, page=page)
-
-@app.route('/chercher-contacts', methods=['POST'])
-def chercher_contacts():
-    donnees = request.get_json()
-    domaine = donnees.get('domaine', '')
-    hunter_key = donnees.get('hunter_key', '')
-    
-    resultat = obtenir_emails_hunter(domaine, hunter_key)
-    return jsonify(resultat)
-
-@app.route('/generer-email', methods=['POST'])
-def generer_email():
-    donnees = request.get_json()
-    gemini_key = donnees.get('gemini_key', '')
-    if not gemini_key: return jsonify({'succes': False, 'erreur': 'Clé API Google Gemini non configurée.'}), 400
-
-    prompt = f"""
-    Rédige un email de candidature spontanée professionnel, concis et percutant.
-    Paramètres :
-    - Entreprise cible : {donnees.get('entreprise', '')}
-    - Secteur d'activité : {donnees.get('domaine', '')}
-    - Destinataire : {donnees.get('contact', 'Responsable')} ({donnees.get('poste', 'Recrutement')})
-    - Profil : Développeur Web / Logiciel
-    Contraintes : Longueur max 150 mots. Ton professionnel et direct.
-    """
-    try:
-        gemini_client = genai.Client(api_key=gemini_key)
-        reponse = gemini_client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
-        return jsonify({'succes': True, 'email_texte': reponse.text})
-    except Exception as e:
-        erreur_msg = str(e)
-        if "429" in erreur_msg or "quota" in erreur_msg.lower(): erreur_msg = "⚠️ Limite d'API Google Gemini dépassée. Veuillez réessayer plus tard."
-        return jsonify({'succes': False, 'erreur': erreur_msg}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
