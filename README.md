@@ -9,8 +9,6 @@ Application web en Python (Flask) pour automatiser la recherche d'entreprises et
 Vous devez générer vos propres clés API gratuites et les insérer directement dans l'interface web (via la roue crantée en haut à droite) :
 1. **Hunter.io API Key** : Pour extraire les adresses e-mails.
 2. **Serper.dev API Key** : Pour trouver les sites web officiels.
-3. **Google Gemini API Key** : Pour la rédaction IA des messages.
-*(Les clés sont stockées de façon sécurisée, uniquement dans la mémoire locale de votre navigateur).*
 
 ## Installation et lancement
 
