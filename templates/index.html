@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospection IA | Recherche</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen relative">
+    
+    <button onclick="toggleConfig()" class="absolute top-6 right-6 bg-white p-3 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition border border-gray-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    </button>
+
+    <div id="configModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Configuration des API</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Clé API Hunter.io</label>
+                    <input type="password" id="inputHunter" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Clé API Serper.dev (Google Search)</label>
+                    <input type="password" id="inputSerper" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Clé API Google Gemini</label>
+                    <input type="password" id="inputGemini" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="toggleConfig()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Annuler</button>
+                    <button type="button" onclick="sauvegarderCles()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Trouver des entreprises</h1>
+        
+        <form method="POST" class="space-y-5" onsubmit="preparerFormulaire()">
+            <input type="hidden" id="hiddenHunterKey" name="hunter_key">
+            <input type="hidden" id="hiddenSerperKey" name="serper_key">
+            
+            <div>
+                <!-- Retrait de la mention required et modification du placeholder -->
+                <label for="ville" class="block text-sm font-medium text-gray-700 mb-1">Ville (Optionnel)</label>
+                <input type="text" id="ville" name="ville" placeholder="Ex: Bordeaux (laisser vide pour la France entière)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition shadow-sm">
+            </div>
+            
+            <div>
+                <label for="domaine" class="block text-sm font-medium text-gray-700 mb-1">Secteur ou mot-clé</label>
+                <input type="text" id="domaine" name="domaine" list="liste-domaines" placeholder="Sélectionnez ou tapez un domaine..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition shadow-sm bg-white" autocomplete="off" required>
+                
+                <datalist id="liste-domaines">
+                    {% for domaine in domaines %}
+                        <option value="{{ domaine }}"></option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            
+            <button id="btnSubmit" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200 shadow-md">
+                Rechercher
+            </button>
+        </form>
+
+        <div id="loader" class="hidden mt-6 text-center">
+            <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600 mt-3 text-sm font-medium">Recherche et extraction des contacts en cours...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('inputHunter').value = localStorage.getItem('hunter_key') || '';
+            document.getElementById('inputSerper').value = localStorage.getItem('serper_key') || '';
+            document.getElementById('inputGemini').value = localStorage.getItem('gemini_key') || '';
+        });
+
+        function toggleConfig() {
+            document.getElementById('configModal').classList.toggle('hidden');
+        }
+
+        function sauvegarderCles() {
+            const hunter = document.getElementById('inputHunter').value;
+            const serper = document.getElementById('inputSerper').value;
+            const gemini = document.getElementById('inputGemini').value;
+            localStorage.setItem('hunter_key', hunter.trim());
+            localStorage.setItem('serper_key', serper.trim());
+            localStorage.setItem('gemini_key', gemini.trim());
+            toggleConfig();
+            alert("Clés API sauvegardées avec succès !");
+        }
+
+        function preparerFormulaire() {
+            document.getElementById('hiddenHunterKey').value = localStorage.getItem('hunter_key') || '';
+            document.getElementById('hiddenSerperKey').value = localStorage.getItem('serper_key') || '';
+
+            const btn = document.getElementById('btnSubmit');
+            const loader = document.getElementById('loader');
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerText = 'Recherche en cours...';
+            
+            loader.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

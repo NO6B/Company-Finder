@@ -1,0 +1,335 @@
+{% if not uniquement_cartes %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospection IA | Résultats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-6 md:p-12 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Résultats de recherche</h1>
+            <a href="/" class="text-blue-600 hover:text-blue-800 font-medium transition">&larr; Nouvelle recherche</a>
+        </div>
+
+        {% if erreur_globale %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm mb-6">
+            <h2 class="text-xl font-bold text-red-800 mb-2">Erreur de recherche</h2>
+            <p class="text-red-700">{{ erreur_globale }}</p>
+        </div>
+        {% endif %}
+
+        <div id="liste-entreprises" class="grid grid-cols-1 gap-6">
+{% endif %}
+
+            <!-- SÉPARATEUR VISUEL DE NOUVELLE PAGE -->
+            {% if uniquement_cartes and page %}
+            <div class="flex items-center justify-center pt-6 pb-2 opacity-80 col-span-1">
+                <div class="w-1/4 border-t border-gray-300"></div>
+                <span class="px-4 text-xs font-bold text-gray-500 uppercase tracking-widest bg-gray-200 rounded-full py-1 mx-4 shadow-inner">
+                    Page {{ page }}
+                </span>
+                <div class="w-1/4 border-t border-gray-300"></div>
+            </div>
+            {% endif %}
+
+            {% for entreprise in entreprises %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-2">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">{{ entreprise.nom }}</h2>
+                        {% if entreprise.site_web %}
+                            <a href="https://{{ entreprise.site_web }}" target="_blank" class="text-sm text-blue-500 hover:underline">{{ entreprise.site_web }}</a>
+                        {% else %}
+                            <span class="text-sm text-gray-400">Site web introuvable</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">Dép. {{ entreprise.departement }}</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">{{ entreprise.domaine }}</span>
+                        <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full">{{ entreprise.ville }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4 pb-4 border-b border-gray-100">
+                    <p class="text-sm text-gray-500 mb-2">Description rapide : 
+                        <span class="{% if '⚠️' in entreprise.description %}text-red-600 font-bold{% else %}text-gray-600 italic{% endif %}">
+                            "{{ entreprise.description }}"
+                        </span>
+                    </p>
+                </div>
+
+                <div class="mt-2">
+                    <button onclick="toggleContacts(this)" class="flex items-center justify-between w-full text-left font-bold text-gray-700 hover:text-blue-600 transition outline-none p-2 rounded-lg hover:bg-gray-50">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Contacts
+                            <span class="hunter-badge"></span>
+                        </span>
+                        <svg class="h-5 w-5 transform transition-transform duration-200 chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div class="contacts-container hidden mt-4 pl-2">
+                        {% if entreprise.site_web %}
+                        <div class="text-center p-2">
+                            <button 
+                                data-nom="{{ entreprise.nom|e }}" 
+                                data-site="{{ entreprise.site_web|e }}" 
+                                data-domaine="{{ entreprise.domaine|e }}" 
+                                onclick="lancerRechercheHunter(this)" 
+                                class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-3 px-4 rounded-lg transition border border-blue-200 text-sm w-full flex justify-center items-center gap-2">
+                                🔍 Chercher les adresses e-mails (Hunter.io)
+                            </button>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">Impossible de chercher les contacts sans site web officiel.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                {% if not erreur_globale %}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center" id="message-vide">
+                    <p class="text-gray-500 text-lg">Aucune entreprise ne correspond à vos critères pour le moment.</p>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+{% if not uniquement_cartes %}
+        </div>
+
+        {% if entreprises|length == 25 %}
+        <div class="mt-8 flex justify-center" id="conteneur-bouton-plus">
+            <button id="btn-charger-plus" onclick="chargerPageSuivante()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 rounded-xl shadow-md transition flex items-center gap-3">
+                <span id="texte-bouton-plus">Charger la page suivante</span>
+                <svg id="spinner-plus" class="animate-spin hidden h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        let pageActuelle = 1;
+        const rechercheVille = "{{ ville }}";
+        const rechercheDomaine = "{{ domaine }}";
+
+        function escapeHtmlJS(texte) {
+            return texte.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        async function chargerPageSuivante() {
+            const bouton = document.getElementById('btn-charger-plus');
+            const texteBouton = document.getElementById('texte-bouton-plus');
+            const spinner = document.getElementById('spinner-plus');
+            const listeEntreprises = document.getElementById('liste-entreprises');
+
+            bouton.disabled = true;
+            bouton.classList.add('opacity-75', 'cursor-not-allowed');
+            spinner.classList.remove('hidden');
+            pageActuelle++;
+            texteBouton.innerText = `Recherche de la page ${pageActuelle}...`;
+
+            try {
+                const reponse = await fetch('/charger-plus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ville: rechercheVille,
+                        domaine: rechercheDomaine,
+                        page: pageActuelle,
+                        serper_key: localStorage.getItem('serper_key') || ''
+                    })
+                });
+
+                if (reponse.ok) {
+                    const htmlNouvellesCartes = await reponse.text();
+                    if (htmlNouvellesCartes.trim() === "") {
+                        document.getElementById('conteneur-bouton-plus').innerHTML = "<p class='text-gray-500 font-medium'>Vous avez atteint la fin des résultats.</p>";
+                    } else {
+                        listeEntreprises.insertAdjacentHTML('beforeend', htmlNouvellesCartes);
+                        texteBouton.innerText = `Charger la page ${pageActuelle + 1}`;
+                    }
+                } else {
+                    alert("Erreur lors de la récupération des nouvelles entreprises.");
+                    pageActuelle--;
+                    texteBouton.innerText = "Réessayer de charger";
+                }
+            } catch (err) {
+                alert("Erreur réseau de connexion au serveur.");
+                pageActuelle--;
+                texteBouton.innerText = "Réessayer de charger";
+            } finally {
+                bouton.disabled = false;
+                bouton.classList.remove('opacity-75', 'cursor-not-allowed');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function toggleContacts(bouton) {
+            const container = bouton.nextElementSibling;
+            const chevron = bouton.querySelector('.chevron');
+            container.classList.toggle('hidden');
+            if (container.classList.contains('hidden')) {
+                chevron.classList.remove('rotate-180');
+            } else {
+                chevron.classList.add('rotate-180');
+            }
+        }
+
+        async function lancerRechercheHunter(bouton) {
+            const entreprise = bouton.getAttribute('data-nom');
+            const siteWeb = bouton.getAttribute('data-site');
+            const domaineRecherche = bouton.getAttribute('data-domaine');
+
+            const hunterKey = localStorage.getItem('hunter_key');
+            if (!hunterKey) {
+                alert("Veuillez configurer votre clé Hunter.io dans l'engrenage sur la page d'accueil.");
+                return;
+            }
+            
+            const texteOriginal = bouton.innerHTML;
+            bouton.disabled = true;
+            bouton.innerHTML = "Recherche en cours... ⏳";
+            bouton.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                const reponse = await fetch('/chercher-contacts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domaine: siteWeb, hunter_key: hunterKey })
+                });
+                
+                const data = await reponse.json();
+                const container = bouton.parentElement;
+                
+                if (data.erreur) {
+                    container.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-sm font-bold">${data.erreur}</div>`;
+                } 
+                else if (data.emails && data.emails.length > 0) {
+                    let html = '<div class="space-y-4 text-left">';
+                    data.emails.forEach(email => {
+                        const prenom = email.first_name || '';
+                        const nom = email.last_name || '';
+                        const poste = email.position || 'Poste non spécifié';
+                        
+                        // Sécurisation des données avant injection dans le bouton Gemini
+                        const nomCompletSafe = escapeHtmlJS(`${prenom} ${nom}`);
+                        const posteSafe = escapeHtmlJS(poste);
+                        const entrepriseSafe = escapeHtmlJS(entreprise);
+                        const domaineSafe = escapeHtmlJS(domaineRecherche);
+                        
+                        html += `
+                        <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                <div>
+                                    <p class="font-bold text-gray-900">${prenom} ${nom}</p>
+                                    <p class="text-sm text-gray-600 font-medium">${poste}</p>
+                                    <a href="mailto:${email.value}" class="text-sm text-blue-600 hover:underline mt-1 inline-block">${email.value}</a>
+                                </div>
+                                <button 
+                                    data-entreprise="${entrepriseSafe}" 
+                                    data-domaine="${domaineSafe}" 
+                                    data-contact="${nomCompletSafe}" 
+                                    data-poste="${posteSafe}"
+                                    onclick="genererCandidature(this)" 
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-sm whitespace-nowrap">
+                                    Générer email IA
+                                </button>
+                            </div>
+                            <div class="ia-result hidden mt-4">
+                                <div class="relative bg-white border border-indigo-100 rounded-lg p-5 shadow-inner">
+                                    <button onclick="copierTexte(this)" class="absolute top-3 right-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded transition">Copier</button>
+                                    <pre class="email-content text-sm text-gray-700 whitespace-pre-wrap font-sans mt-6"></pre>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    
+                    container.outerHTML = html;
+                    
+                    const badge = bouton.closest('.mt-2').querySelector('.hunter-badge');
+                    if(badge) {
+                        badge.innerHTML = `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs ml-2">${data.emails.length}</span>`;
+                    }
+                } 
+                else {
+                    container.innerHTML = `<p class="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">Aucun contact n'a été trouvé pour cette entreprise.</p>`;
+                }
+            } catch (err) {
+                alert("Erreur de connexion avec le serveur.");
+                bouton.disabled = false;
+                bouton.innerHTML = texteOriginal;
+                bouton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        async function genererCandidature(bouton) {
+            // Lecture sécurisée des données
+            const entreprise = bouton.getAttribute('data-entreprise');
+            const domaine = bouton.getAttribute('data-domaine');
+            const contact = bouton.getAttribute('data-contact');
+            const poste = bouton.getAttribute('data-poste');
+
+            const geminiKey = localStorage.getItem('gemini_key');
+            if (!geminiKey) {
+                alert("Veuillez configurer votre clé Google Gemini.");
+                return;
+            }
+
+            const blocResultat = bouton.closest('.bg-gray-50').querySelector('.ia-result');
+            const zoneTexte = blocResultat.querySelector('.email-content');
+            const texteOriginal = bouton.innerText;
+            
+            bouton.disabled = true;
+            bouton.innerText = "Génération...";
+            bouton.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                const reponse = await fetch('/generer-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entreprise, domaine, contact, poste, gemini_key: geminiKey })
+                });
+
+                const data = await reponse.json();
+                if (data.succes) {
+                    blocResultat.classList.remove('hidden');
+                    zoneTexte.innerText = data.email_texte;
+                } else {
+                    alert(data.erreur);
+                }
+            } catch (err) {
+                alert("Erreur de connexion avec le serveur.");
+            } finally {
+                bouton.disabled = false;
+                bouton.innerText = texteOriginal;
+                bouton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function copierTexte(bouton) {
+            const texte = bouton.nextElementSibling.innerText;
+            navigator.clipboard.writeText(texte).then(() => {
+                const texteOriginal = bouton.innerText;
+                bouton.innerText = "Copié !";
+                bouton.classList.add('bg-green-100', 'text-green-800');
+                setTimeout(() => {
+                    bouton.innerText = texteOriginal;
+                    bouton.classList.remove('bg-green-100', 'text-green-800');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
+{% endif %}
